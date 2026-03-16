@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área da Cliente — Isabela Marques</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 6rem 1.6rem 3rem; }
+    .auth-card { background: rgba(253,246,240,0.92); backdrop-filter: blur(16px); border: 1px solid var(--border); padding: 3.2rem 2.8rem; width: 100%; max-width: 460px; }
+    .auth-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.32rem; font-weight: 400; letter-spacing: .08em; color: var(--text); text-decoration: none; display: block; margin-bottom: 2.4rem; text-align: center; }
+    .auth-logo span { color: var(--rose); font-style: italic; }
+    .auth-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; color: var(--text); margin-bottom: .4rem; line-height: 1.2; }
+    .auth-title em { font-style: italic; color: var(--rose); }
+    .auth-sub { font-size: .95rem; font-weight: 300; color: var(--text-muted); margin-bottom: 2.2rem; padding-bottom: 1.6rem; border-bottom: 1px solid var(--border); }
+    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 2rem; }
+    .auth-tab { flex: 1; font-family: 'Jost', sans-serif; font-size: .8rem; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted); background: transparent; border: 1px solid var(--border); padding: .65rem; cursor: pointer; transition: all .25s; }
+    .auth-tab.active { background: var(--rose); border-color: var(--rose); color: var(--warm-white); }
+    .auth-form { display: none; flex-direction: column; gap: 1.2rem; }
+    .auth-form.active { display: flex; }
+    .auth-form .form-group { margin-bottom: 0; }
+    .auth-form label { font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rose); font-weight: 500; display: block; margin-bottom: .4rem; }
+    .auth-form input { font-family: 'Jost', sans-serif; font-size: 1rem; font-weight: 300; color: var(--text); background: rgba(255,255,255,0.6); border: 1px solid var(--border); padding: .8rem 1rem; outline: none; transition: border-color .2s; width: 100%; }
+    .auth-form input:focus { border-color: var(--rose-light); }
+    .auth-btn { font-family: 'Jost', sans-serif; font-size: .9rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--warm-white); background: var(--rose); border: none; padding: 1rem; cursor: pointer; transition: background .25s; width: 100%; margin-top: .4rem; }
+    .auth-btn:hover { background: var(--rose-deep); }
+    .auth-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .auth-btn-ghost { background: transparent !important; color: var(--rose) !important; border: 1px solid var(--rose-light) !important; margin-top: 0 !important; }
+    .auth-btn-ghost:hover { background: var(--rose-pale) !important; }
+    .auth-msg { font-size: .9rem; font-weight: 300; padding: .8rem 1rem; border: 1px solid; display: none; margin-bottom: .4rem; }
+    .auth-msg.error { color: #8f2a2a; border-color: #d4a0a0; background: #fdf0f0; }
+    .auth-msg.success { color: #2a5e3f; border-color: #a0c4b2; background: #f0fdf6; }
+    .auth-msg.show { display: block; }
+    .auth-admin-link { display: block; text-align: center; margin-top: 1.6rem; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color .2s; padding-top: 1.4rem; border-top: 1px solid var(--border); }
+    .auth-admin-link:hover { color: var(--rose); }
+    .back-link { display: inline-flex; align-items: center; gap: .4rem; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; margin-bottom: 1.6rem; transition: color .2s; }
+    .back-link:hover { color: var(--rose); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">Isabela <span>Marques</span></a>
+  </nav>
+
+  <div class="auth-page">
+    <div class="auth-card">
+      <a href="index.html" class="back-link">← Voltar ao site</a>
+      <a href="index.html" class="auth-logo">Isabela <span>Marques</span></a>
+      <h1 class="auth-title">Área da <em>Cliente</em></h1>
+      <p class="auth-sub">Acesse seu histórico de tratamentos, fotos e agendamentos.</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Entrar</button>
+        <button class="auth-tab" onclick="switchTab('cadastro')">Cadastrar</button>
+      </div>
+
+      <div id="msg" class="auth-msg"></div>
+
+      <!-- LOGIN -->
+      <form id="form-login" class="auth-form active" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="login-email" placeholder="seu@email.com" required />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="login-senha" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="auth-btn" id="btn-login">Entrar</button>
+        <button type="button" class="auth-btn auth-btn-ghost" onclick="handleResetPassword()">Esqueci minha senha</button>
+      </form>
+
+      <!-- CADASTRO -->
+      <form id="form-cadastro" class="auth-form" onsubmit="handleCadastro(event)">
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" id="cad-nome" placeholder="Ana Silva" required />
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="cad-email" placeholder="seu@email.com" required />
+        </div>
+        <div class="form-group">
+          <label>WhatsApp</label>
+          <input type="tel" id="cad-tel" placeholder="(12) 99999-9999" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres" required minlength="6" />
+        </div>
+        <button type="submit" class="auth-btn" id="btn-cadastro">Criar conta</button>
+      </form>
+
+      <a href="admin.html" class="auth-admin-link">Acesso exclusivo — Isabela Marques</a>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://uieblwzupapqgfdaipao.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZWJsd3p1cGFwcWdmZGFpcGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjQ3MzIsImV4cCI6MjA4OTIwMDczMn0.JPn7XdRS2PS5ByEVhRo8OslaAfXFESNRCrEl_BPx1HY';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) checkAndRedirect(session.user.id);
+    });
+
+    async function checkAndRedirect(userId) {
+      const { data } = await sb.from('profiles').select('is_admin').eq('id', userId).single();
+      window.location.href = data?.is_admin ? 'admin-dashboard.html' : 'cliente.html';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'cadastro'));
+      });
+      document.getElementById('form-login').classList.toggle('active', tab === 'login');
+      document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro');
+      showMsg('', '');
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'auth-msg' + (text ? ' show ' + type : '');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-login');
+      btn.disabled = true; btn.textContent = 'Entrando...';
+      const { error } = await sb.auth.signInWithPassword({
+        email: document.getElementById('login-email').value,
+        password: document.getElementById('login-senha').value
+      });
+      if (error) {
+        showMsg('E-mail ou senha incorretos.', 'error');
+        btn.disabled = false; btn.textContent = 'Entrar';
+      } else {
+        showMsg('Bem-vinda! Redirecionando...', 'success');
+        const { data: { user } } = await sb.auth.getUser();
+        setTimeout(() => checkAndRedirect(user.id), 800);
+      }
+    }
+
+    async function handleCadastro(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-cadastro');
+      btn.disabled = true; btn.textContent = 'Criando conta...';
+      const { error } = await sb.auth.signUp({
+        email: document.getElementById('cad-email').value,
+        password: document.getElementById('cad-senha').value,
+        options: { data: { nome: document.getElementById('cad-nome').value, telefone: document.getElementById('cad-tel').value } }
+      });
+      if (error) {
+        showMsg(error.message === 'User already registered' ? 'E-mail já cadastrado.' : 'Erro ao criar conta.', 'error');
+      } else {
+        showMsg('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
+      }
+      btn.disabled = false; btn.textContent = 'Criar conta';
+    }
+
+    async function handleResetPassword() {
+      const email = document.getElementById('login-email').value;
+      if (!email) { showMsg('Digite seu e-mail acima primeiro.', 'error'); return; }
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/login.html' });
+      if (error) showMsg('Erro ao enviar e-mail.', 'error');
+      else showMsg('E-mail de recuperação enviado!', 'success');
+    }
+  </script>
+</body>
+</html>

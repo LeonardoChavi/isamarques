@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acesso Exclusivo — Isabela Marques</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 6rem 1.6rem 3rem; }
+    .auth-card { background: rgba(253,246,240,0.92); backdrop-filter: blur(16px); border: 1px solid var(--border); padding: 3.2rem 2.8rem; width: 100%; max-width: 420px; }
+    .auth-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.32rem; font-weight: 400; letter-spacing: .08em; color: var(--text); text-decoration: none; display: block; margin-bottom: 2.4rem; text-align: center; }
+    .auth-logo span { color: var(--rose); font-style: italic; }
+    .auth-badge { display: inline-block; font-size: .72rem; letter-spacing: .22em; text-transform: uppercase; color: var(--rose); border: 1px solid var(--rose-light); padding: .3rem .8rem; margin-bottom: 1rem; }
+    .auth-title { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; color: var(--text); margin-bottom: .4rem; line-height: 1.2; }
+    .auth-title em { font-style: italic; color: var(--rose); }
+    .auth-sub { font-size: .95rem; font-weight: 300; color: var(--text-muted); margin-bottom: 2.2rem; padding-bottom: 1.6rem; border-bottom: 1px solid var(--border); }
+    .auth-form { display: flex; flex-direction: column; gap: 1.2rem; }
+    .auth-form label { font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rose); font-weight: 500; display: block; margin-bottom: .4rem; }
+    .auth-form input { font-family: 'Jost', sans-serif; font-size: 1rem; font-weight: 300; color: var(--text); background: rgba(255,255,255,0.6); border: 1px solid var(--border); padding: .8rem 1rem; outline: none; transition: border-color .2s; width: 100%; }
+    .auth-form input:focus { border-color: var(--rose-light); }
+    .auth-btn { font-family: 'Jost', sans-serif; font-size: .9rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--warm-white); background: var(--rose-deep); border: none; padding: 1rem; cursor: pointer; transition: background .25s; width: 100%; margin-top: .4rem; }
+    .auth-btn:hover { background: var(--rose); }
+    .auth-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .auth-msg { font-size: .9rem; font-weight: 300; padding: .8rem 1rem; border: 1px solid; display: none; margin-bottom: .4rem; }
+    .auth-msg.error { color: #8f2a2a; border-color: #d4a0a0; background: #fdf0f0; }
+    .auth-msg.success { color: #2a5e3f; border-color: #a0c4b2; background: #f0fdf6; }
+    .auth-msg.show { display: block; }
+    .back-link { display: inline-flex; align-items: center; gap: .4rem; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; margin-bottom: 1.6rem; transition: color .2s; }
+    .back-link:hover { color: var(--rose); }
+    .cliente-link { display: block; text-align: center; margin-top: 1.4rem; padding-top: 1.4rem; border-top: 1px solid var(--border); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); text-decoration: none; transition: color .2s; }
+    .cliente-link:hover { color: var(--rose); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-logo">Isabela <span>Marques</span></a>
+  </nav>
+
+  <div class="auth-page">
+    <div class="auth-card">
+      <a href="login.html" class="back-link">← Área de clientes</a>
+      <a href="index.html" class="auth-logo">Isabela <span>Marques</span></a>
+      <span class="auth-badge">Acesso Exclusivo</span>
+      <h1 class="auth-title">Painel <em>Administrativo</em></h1>
+      <p class="auth-sub">Área restrita. Somente Isabela Marques.</p>
+
+      <div id="msg" class="auth-msg"></div>
+
+      <form class="auth-form" onsubmit="handleAdminLogin(event)">
+        <div>
+          <label>E-mail</label>
+          <input type="email" id="admin-email" placeholder="seu@email.com" required />
+        </div>
+        <div>
+          <label>Senha</label>
+          <input type="password" id="admin-senha" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="auth-btn" id="btn-admin">Acessar painel</button>
+      </form>
+
+      <a href="login.html" class="cliente-link">Área de clientes →</a>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://uieblwzupapqgfdaipao.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZWJsd3p1cGFwcWdmZGFpcGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjQ3MzIsImV4cCI6MjA4OTIwMDczMn0.JPn7XdRS2PS5ByEVhRo8OslaAfXFESNRCrEl_BPx1HY';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    sb.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const { data } = await sb.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (data?.is_admin) window.location.href = 'admin-dashboard.html';
+      }
+    });
+
+    function showMsg(text, type) {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'auth-msg' + (text ? ' show ' + type : '');
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-admin');
+      btn.disabled = true; btn.textContent = 'Verificando...';
+
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: document.getElementById('admin-email').value,
+        password: document.getElementById('admin-senha').value
+      });
+
+      if (error) {
+        showMsg('Credenciais inválidas.', 'error');
+        btn.disabled = false; btn.textContent = 'Acessar painel';
+        return;
+      }
+
+      const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', data.user.id).single();
+
+      if (!profile?.is_admin) {
+        await sb.auth.signOut();
+        showMsg('Acesso não autorizado.', 'error');
+        btn.disabled = false; btn.textContent = 'Acessar painel';
+        return;
+      }
+
+      showMsg('Bem-vinda, Isabela! Redirecionando...', 'success');
+      setTimeout(() => window.location.href = 'admin-dashboard.html', 800);
+    }
+  </script>
+</body>
+</html>
