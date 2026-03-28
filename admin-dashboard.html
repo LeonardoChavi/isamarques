@@ -173,9 +173,24 @@
           <input type="datetime-local" id="s-data" />
         </div>
         <div>
-          <label>Observações / evolução</label>
-          <textarea id="s-obs" placeholder="Descreva a evolução do tratamento, produtos utilizados, etc."></textarea>
+          <label>Tratamento realizado</label>
+          <textarea id="s-tratamento" placeholder="Descreva detalhadamente o que foi feito: técnicas aplicadas, produtos utilizados, áreas tratadas..."></textarea>
         </div>
+        <div>
+          <label>Evolução / observações</label>
+          <textarea id="s-obs" placeholder="Como a cliente respondeu ao tratamento, resultados observados, próximos passos..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+          <div>
+            <label>Foto — Antes</label>
+            <input type="file" id="s-foto-antes" accept="image/*" style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" />
+          </div>
+          <div>
+            <label>Foto — Depois</label>
+            <input type="file" id="s-foto-depois" accept="image/*" style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" />
+          </div>
+        </div>
+        <div id="s-upload-progress" style="display:none;font-size:.85rem;color:var(--text-muted);font-weight:300;"></div>
         <div style="display:flex;gap:.8rem;">
           <button class="btn-primary" style="flex:1;" onclick="salvarSessao()" id="btn-salvar-sessao">Salvar sessão</button>
           <button class="btn-ghost" style="flex:1;" onclick="closeModal('modal-sessao')">Cancelar</button>
@@ -373,11 +388,17 @@
               <div style="font-size:1rem;font-weight:400;color:var(--text);">${s.servicos?.nome||'Atendimento'}</div>
               <div style="font-size:.85rem;color:var(--rose-deep);">${dt}</div>
             </div>`;
-          if (s.evolucao||s.observacoes) html += `<div style="padding:1rem 1.4rem;font-size:.9rem;color:var(--text-muted);line-height:1.8;">${s.evolucao||s.observacoes}</div>`;
+          if (s.tratamento) html += `<div style="padding:1rem 1.4rem .4rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Tratamento realizado</div><div style="font-size:.9rem;color:var(--text);line-height:1.8;">${s.tratamento}</div></div>`;
+          if (s.observacoes) html += `<div style="padding:${s.tratamento?'.4rem':'1rem'} 1.4rem 1rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Evolução / Observações</div><div style="font-size:.9rem;color:var(--text-muted);line-height:1.8;font-style:italic;">${s.observacoes}</div></div>`;
           if (fotos.length) {
-            html += `<div style="padding:.6rem 1.4rem 1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.6rem;">`;
-            fotos.forEach(f => { html += `<div style="aspect-ratio:1;overflow:hidden;border:1px solid var(--border);position:relative;"><img src="${f.url}" style="width:100%;height:100%;object-fit:cover;" /><span style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.4);color:white;font-size:.6rem;text-align:center;padding:.2rem;text-transform:uppercase;letter-spacing:.1em;">${f.tipo}</span></div>`; });
-            html += `</div>`;
+            const fotoAntes  = fotos.find(f => f.tipo === 'antes');
+            const fotoDepois = fotos.find(f => f.tipo === 'depois');
+            html += `<div style="padding:.6rem 1.4rem 1rem;">`;
+            html += `<div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.6rem;">Fotos</div>`;
+            html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">`;
+            if (fotoAntes)  html += `<div><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text-muted);margin-bottom:.3rem;">Antes</div><img src="${fotoAntes.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--border);" /></div>`;
+            if (fotoDepois) html += `<div><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text-muted);margin-bottom:.3rem;">Depois</div><img src="${fotoDepois.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--border);" /></div>`;
+            html += `</div></div>`;
           }
           if (produtos.length) {
             html += `<div style="padding:.4rem 1.4rem 1rem;display:flex;flex-wrap:wrap;gap:.4rem;">`;
@@ -393,15 +414,48 @@
     async function salvarSessao() {
       const btn = document.getElementById('btn-salvar-sessao');
       btn.disabled = true; btn.textContent = 'Salvando...';
-      const { error } = await sb.from('sessoes').insert({
+
+      // 1. Salva a sessão e retorna o ID
+      const { data: sessao, error } = await sb.from('sessoes').insert({
         cliente_id: document.getElementById('s-cliente').value,
         servico_id: document.getElementById('s-servico').value || null,
         data_sessao: document.getElementById('s-data').value,
+        tratamento: document.getElementById('s-tratamento').value || null,
         observacoes: document.getElementById('s-obs').value,
         status: 'realizada'
-      });
+      }).select().single();
+
+      if (error) {
+        btn.disabled = false; btn.textContent = 'Salvar sessão';
+        showMsg('msg-sessao', 'Erro ao salvar sessão.', 'error'); return;
+      }
+
+      // 2. Upload das fotos (se houver)
+      const progress = document.getElementById('s-upload-progress');
+      const fotoAntes  = document.getElementById('s-foto-antes').files[0];
+      const fotoDepois = document.getElementById('s-foto-depois').files[0];
+
+      async function uploadFoto(file, tipo) {
+        if (!file) return;
+        progress.style.display = 'block';
+        progress.textContent = `Enviando foto ${tipo}...`;
+        const ext = file.name.split('.').pop();
+        const path = `${sessao.id}/${tipo}-${Date.now()}.${ext}`;
+        const { error: upErr } = await sb.storage.from('fotos-sessoes').upload(path, file, { upsert: true });
+        if (upErr) { progress.textContent = `Erro ao enviar foto ${tipo}: ${upErr.message}`; return; }
+        const { data: { publicUrl } } = sb.storage.from('fotos-sessoes').getPublicUrl(path);
+        await sb.from('fotos_sessao').insert({ sessao_id: sessao.id, url: publicUrl, tipo });
+      }
+
+      await uploadFoto(fotoAntes, 'antes');
+      await uploadFoto(fotoDepois, 'depois');
+
+      progress.style.display = 'none';
+      document.getElementById('s-tratamento').value = '';
+      document.getElementById('s-foto-antes').value  = '';
+      document.getElementById('s-foto-depois').value = '';
+
       btn.disabled = false; btn.textContent = 'Salvar sessão';
-      if (error) { showMsg('msg-sessao', 'Erro ao salvar sessão.', 'error'); return; }
       closeModal('modal-sessao');
       showMsg('msg-sessao', 'Sessão registrada com sucesso!', 'success');
       await loadAll();
