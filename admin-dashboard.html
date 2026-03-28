@@ -166,7 +166,12 @@
         </div>
         <div>
           <label>Serviço</label>
-          <select id="s-servico"></select>
+          <select id="s-servico">
+            <option value="">— Selecione —</option>
+            <option value="capilar">Capilar</option>
+            <option value="corporal">Corporal</option>
+            <option value="facial">Facial</option>
+          </select>
         </div>
         <div>
           <label>Data da sessão</label>
@@ -364,7 +369,7 @@
       const clienteOpts = allClientes.map(c=>`<option value="${c.id}">${c.nome||c.email}</option>`).join('');
       const servicoOpts = `<option value="">— Selecione —</option>` + allServicos.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');
       ['s-cliente','a-cliente'].forEach(id => document.getElementById(id).innerHTML = clienteOpts);
-      ['s-servico','a-servico'].forEach(id => document.getElementById(id).innerHTML = servicoOpts);
+      document.getElementById('a-servico').innerHTML = servicoOpts; // só agendamentos usa os serviços do banco
     }
 
     async function abrirCliente(id) {
@@ -384,9 +389,12 @@
           const fotos = s.fotos_sessao||[];
           const produtos = s.produtos_sessao||[];
           html += `<div style="border:1px solid var(--border);margin-top:.8rem;overflow:hidden;">
-            <div style="padding:1.2rem 1.4rem;background:rgba(185,122,138,0.06);">
-              <div style="font-size:1rem;font-weight:400;color:var(--text);">${s.servicos?.nome||'Atendimento'}</div>
-              <div style="font-size:.85rem;color:var(--rose-deep);">${dt}</div>
+            <div style="padding:1.2rem 1.4rem;background:rgba(185,122,138,0.06);display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+              <div>
+                <div style="font-size:1rem;font-weight:400;color:var(--text);">${s.categoria ? s.categoria.charAt(0).toUpperCase()+s.categoria.slice(1) : (s.servicos?.nome||'Atendimento')}</div>
+                <div style="font-size:.85rem;color:var(--rose-deep);">${dt}</div>
+              </div>
+              <button onclick="excluirSessao('${s.id}', '${currentClienteId}')" style="font-family:'Jost',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);padding:.35rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='#8f2a2a';this.style.borderColor='#d4a0a0';" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)';">Excluir</button>
             </div>`;
           if (s.tratamento) html += `<div style="padding:1rem 1.4rem .4rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Tratamento realizado</div><div style="font-size:.9rem;color:var(--text);line-height:1.8;">${s.tratamento}</div></div>`;
           if (s.observacoes) html += `<div style="padding:${s.tratamento?'.4rem':'1rem'} 1.4rem 1rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Evolução / Observações</div><div style="font-size:.9rem;color:var(--text-muted);line-height:1.8;font-style:italic;">${s.observacoes}</div></div>`;
@@ -411,6 +419,33 @@
       document.getElementById('modal-cliente-content').innerHTML = html;
     }
 
+    async function excluirSessao(sessaoId, clienteId) {
+      if (!confirm('Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.')) return;
+
+      // Busca fotos para deletar do Storage
+      const { data: fotos } = await sb.from('fotos_sessao').select('url').eq('sessao_id', sessaoId);
+
+      // Deleta fotos do Storage
+      if (fotos && fotos.length) {
+        const paths = fotos.map(f => {
+          const url = f.url;
+          const idx = url.indexOf('/fotos-sessoes/');
+          return idx !== -1 ? decodeURIComponent(url.substring(idx + 15)) : null;
+        }).filter(Boolean);
+        if (paths.length) await sb.storage.from('fotos-sessoes').remove(paths);
+      }
+
+      // Deleta registros vinculados e a sessão
+      await sb.from('fotos_sessao').delete().eq('sessao_id', sessaoId);
+      await sb.from('produtos_sessao').delete().eq('sessao_id', sessaoId);
+      const { error } = await sb.from('sessoes').delete().eq('id', sessaoId);
+
+      if (error) { alert('Erro ao excluir sessão: ' + error.message); return; }
+
+      // Recarrega o painel da cliente
+      abrirCliente(clienteId);
+    }
+
     async function salvarSessao() {
       const btn = document.getElementById('btn-salvar-sessao');
       btn.disabled = true; btn.textContent = 'Salvando...';
@@ -418,7 +453,7 @@
       // 1. Salva a sessão e retorna o ID
       const { data: sessao, error } = await sb.from('sessoes').insert({
         cliente_id: document.getElementById('s-cliente').value,
-        servico_id: document.getElementById('s-servico').value || null,
+        categoria: document.getElementById('s-servico').value || null,
         data_sessao: document.getElementById('s-data').value,
         tratamento: document.getElementById('s-tratamento').value || null,
         observacoes: document.getElementById('s-obs').value,
