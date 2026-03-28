@@ -48,10 +48,9 @@
 
   <div class="auth-page">
     <div class="auth-card">
-
-      <a href="login.html" class="back-link">← Área de clientes</a>
+      <a href="login.html" class="back-link" id="back-link">← Área de clientes</a>
       <a href="index.html" class="auth-logo">Isabela <span>Marques</span></a>
-      <span class="auth-badge" id="page-badge">Acesso Exclusivo</span>
+      <span class="auth-badge">Acesso Exclusivo</span>
       <h1 class="auth-title" id="page-title">Painel <em>Administrativo</em></h1>
       <p class="auth-sub" id="page-sub">Área restrita. Somente Isabela Marques.</p>
 
@@ -76,7 +75,7 @@
         <button type="button" class="auth-btn auth-btn-ghost" onclick="handleResetPassword()">Esqueci minha senha</button>
       </form>
 
-      <!-- FORMULÁRIO DE NOVA SENHA (reset) -->
+      <!-- FORMULÁRIO DE NOVA SENHA -->
       <form class="auth-form" id="form-reset" style="display:none" onsubmit="handleNewPassword(event)">
         <div>
           <label>Nova senha</label>
@@ -104,6 +103,42 @@
   </div>
 
   <script>
+    const SUPABASE_URL = 'https://uieblwzupapqgfdaipao.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZWJsd3p1cGFwcWdmZGFpcGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjQ3MzIsImV4cCI6MjA4OTIwMDczMn0.JPn7XdRS2PS5ByEVhRo8OslaAfXFESNRCrEl_BPx1HY';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let isRecoveryMode = false;
+
+    function showMsg(text, type) {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'auth-msg' + (text ? ' show ' + type : '');
+    }
+
+    function showResetForm() {
+      isRecoveryMode = true;
+      document.getElementById('form-login').style.display = 'none';
+      document.getElementById('form-reset').style.display = 'flex';
+      document.getElementById('page-title').innerHTML = 'Nova <em>senha</em>';
+      document.getElementById('page-sub').textContent = 'Digite sua nova senha de acesso ao painel.';
+      document.getElementById('back-link').style.display = 'none';
+      document.getElementById('cliente-link').style.display = 'none';
+      showMsg('Link válido! Defina sua nova senha abaixo.', 'success');
+    }
+
+    // Detecta evento PASSWORD_RECOVERY via onAuthStateChange (PKCE flow)
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        showResetForm();
+      } else if (event === 'SIGNED_IN' && !isRecoveryMode) {
+        // Só redireciona se não estiver em modo de recuperação
+        sb.from('profiles').select('is_admin').eq('id', session.user.id).single().then(({ data }) => {
+          if (data?.is_admin) window.location.href = 'admin-dashboard.html';
+        });
+      }
+    });
+
     function toggleSenha(inputId, btn) {
       const input = document.getElementById(inputId);
       const isText = input.type === 'text';
@@ -112,45 +147,6 @@
         ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
         : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
     }
-
-    const SUPABASE_URL = 'https://uieblwzupapqgfdaipao.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZWJsd3p1cGFwcWdmZGFpcGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjQ3MzIsImV4cCI6MjA4OTIwMDczMn0.JPn7XdRS2PS5ByEVhRo8OslaAfXFESNRCrEl_BPx1HY';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function showMsg(text, type) {
-      const el = document.getElementById('msg');
-      el.textContent = text;
-      el.className = 'auth-msg' + (text ? ' show ' + type : '');
-    }
-
-    // Detecta se veio de um link de reset password
-    function checkRecoveryMode() {
-      const hash = window.location.hash;
-      const params = new URLSearchParams(hash.replace('#', '?'));
-      const type = params.get('type');
-      if (type === 'recovery') {
-        // Mostra formulário de nova senha
-        document.getElementById('form-login').style.display = 'none';
-        document.getElementById('form-reset').style.display = 'flex';
-        document.getElementById('page-title').innerHTML = 'Nova <em>senha</em>';
-        document.getElementById('page-sub').textContent = 'Digite sua nova senha de acesso ao painel.';
-        document.getElementById('cliente-link').style.display = 'none';
-        showMsg('Link válido! Defina sua nova senha abaixo.', 'success');
-      }
-    }
-
-    // Ao carregar, verifica se é modo recovery ou sessão ativa
-    window.addEventListener('load', () => {
-      checkRecoveryMode();
-    });
-
-    sb.auth.getSession().then(async ({ data: { session } }) => {
-      if (session && window.location.hash.indexOf('type=recovery') === -1) {
-        const { data } = await sb.from('profiles').select('is_admin').eq('id', session.user.id).single();
-        if (data?.is_admin) window.location.href = 'admin-dashboard.html';
-      }
-    });
 
     async function handleAdminLogin(e) {
       e.preventDefault();
@@ -169,7 +165,6 @@
       }
 
       const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', data.user.id).single();
-
       if (!profile?.is_admin) {
         await sb.auth.signOut();
         showMsg('Acesso não autorizado.', 'error');
@@ -186,10 +181,7 @@
       const nova = document.getElementById('nova-senha').value;
       const confirm = document.getElementById('nova-senha-confirm').value;
 
-      if (nova !== confirm) {
-        showMsg('As senhas não coincidem.', 'error');
-        return;
-      }
+      if (nova !== confirm) { showMsg('As senhas não coincidem.', 'error'); return; }
 
       const btn = document.getElementById('btn-nova-senha');
       btn.disabled = true; btn.textContent = 'Salvando...';
@@ -209,7 +201,9 @@
     async function handleResetPassword() {
       const email = document.getElementById('admin-email').value;
       if (!email) { showMsg('Digite seu e-mail acima primeiro.', 'error'); return; }
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/admin.html' });
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/admin.html'
+      });
       if (error) showMsg('Erro ao enviar e-mail.', 'error');
       else showMsg('E-mail de recuperação enviado para ' + email, 'success');
     }
