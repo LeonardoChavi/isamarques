@@ -377,6 +377,7 @@
 
     async function abrirCliente(id) {
       openModal('modal-cliente');
+      window.currentClienteId = id;
       const cliente = allClientes.find(c=>c.id===id);
       const { data: sessoes } = await sb.from('sessoes').select('*, servicos(nome), fotos_sessao(*), produtos_sessao(*, produtos(*))').eq('cliente_id', id).order('data_sessao',{ascending:false});
 
