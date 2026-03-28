@@ -48,15 +48,17 @@
 
   <div class="auth-page">
     <div class="auth-card">
+
       <a href="login.html" class="back-link">← Área de clientes</a>
       <a href="index.html" class="auth-logo">Isabela <span>Marques</span></a>
-      <span class="auth-badge">Acesso Exclusivo</span>
-      <h1 class="auth-title">Painel <em>Administrativo</em></h1>
-      <p class="auth-sub">Área restrita. Somente Isabela Marques.</p>
+      <span class="auth-badge" id="page-badge">Acesso Exclusivo</span>
+      <h1 class="auth-title" id="page-title">Painel <em>Administrativo</em></h1>
+      <p class="auth-sub" id="page-sub">Área restrita. Somente Isabela Marques.</p>
 
       <div id="msg" class="auth-msg"></div>
 
-      <form class="auth-form" onsubmit="handleAdminLogin(event)">
+      <!-- FORMULÁRIO DE LOGIN -->
+      <form class="auth-form" id="form-login" onsubmit="handleAdminLogin(event)">
         <div>
           <label>E-mail</label>
           <input type="email" id="admin-email" placeholder="seu@email.com" required />
@@ -74,7 +76,30 @@
         <button type="button" class="auth-btn auth-btn-ghost" onclick="handleResetPassword()">Esqueci minha senha</button>
       </form>
 
-      <a href="login.html" class="cliente-link">Área de clientes →</a>
+      <!-- FORMULÁRIO DE NOVA SENHA (reset) -->
+      <form class="auth-form" id="form-reset" style="display:none" onsubmit="handleNewPassword(event)">
+        <div>
+          <label>Nova senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="nova-senha" placeholder="Mínimo 6 caracteres" required minlength="6" />
+            <button type="button" class="toggle-senha" onclick="toggleSenha('nova-senha', this)" aria-label="Mostrar senha">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label>Confirmar nova senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="nova-senha-confirm" placeholder="Repita a senha" required minlength="6" />
+            <button type="button" class="toggle-senha" onclick="toggleSenha('nova-senha-confirm', this)" aria-label="Mostrar senha">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="auth-btn" id="btn-nova-senha">Salvar nova senha</button>
+      </form>
+
+      <a href="login.html" class="cliente-link" id="cliente-link">Área de clientes →</a>
     </div>
   </div>
 
@@ -93,18 +118,39 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    sb.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const { data } = await sb.from('profiles').select('is_admin').eq('id', session.user.id).single();
-        if (data?.is_admin) window.location.href = 'admin-dashboard.html';
-      }
-    });
-
     function showMsg(text, type) {
       const el = document.getElementById('msg');
       el.textContent = text;
       el.className = 'auth-msg' + (text ? ' show ' + type : '');
     }
+
+    // Detecta se veio de um link de reset password
+    function checkRecoveryMode() {
+      const hash = window.location.hash;
+      const params = new URLSearchParams(hash.replace('#', '?'));
+      const type = params.get('type');
+      if (type === 'recovery') {
+        // Mostra formulário de nova senha
+        document.getElementById('form-login').style.display = 'none';
+        document.getElementById('form-reset').style.display = 'flex';
+        document.getElementById('page-title').innerHTML = 'Nova <em>senha</em>';
+        document.getElementById('page-sub').textContent = 'Digite sua nova senha de acesso ao painel.';
+        document.getElementById('cliente-link').style.display = 'none';
+        showMsg('Link válido! Defina sua nova senha abaixo.', 'success');
+      }
+    }
+
+    // Ao carregar, verifica se é modo recovery ou sessão ativa
+    window.addEventListener('load', () => {
+      checkRecoveryMode();
+    });
+
+    sb.auth.getSession().then(async ({ data: { session } }) => {
+      if (session && window.location.hash.indexOf('type=recovery') === -1) {
+        const { data } = await sb.from('profiles').select('is_admin').eq('id', session.user.id).single();
+        if (data?.is_admin) window.location.href = 'admin-dashboard.html';
+      }
+    });
 
     async function handleAdminLogin(e) {
       e.preventDefault();
@@ -133,6 +179,31 @@
 
       showMsg('Bem-vinda, Isabela! Redirecionando...', 'success');
       setTimeout(() => window.location.href = 'admin-dashboard.html', 800);
+    }
+
+    async function handleNewPassword(e) {
+      e.preventDefault();
+      const nova = document.getElementById('nova-senha').value;
+      const confirm = document.getElementById('nova-senha-confirm').value;
+
+      if (nova !== confirm) {
+        showMsg('As senhas não coincidem.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-nova-senha');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+
+      const { error } = await sb.auth.updateUser({ password: nova });
+
+      if (error) {
+        showMsg('Erro ao salvar senha: ' + error.message, 'error');
+        btn.disabled = false; btn.textContent = 'Salvar nova senha';
+        return;
+      }
+
+      showMsg('Senha alterada com sucesso! Redirecionando...', 'success');
+      setTimeout(() => window.location.href = 'admin-dashboard.html', 1500);
     }
 
     async function handleResetPassword() {
