@@ -148,17 +148,17 @@
       const nome = profile?.nome || session.user.email;
       document.getElementById('greeting').innerHTML = `Olá, <em>${nome.split(' ')[0]}</em>`;
 
+      const userId = session.user.id;
+
+      // Guarda userId global para uso no upload
+      window._userId = userId;
+
       // Carrega foto de perfil se existir
       if (profile?.foto_url) {
         document.getElementById('foto-perfil-img').src = profile.foto_url;
         document.getElementById('foto-perfil-img').style.display = 'block';
         document.getElementById('foto-perfil-icon').style.display = 'none';
       }
-
-      // Guarda userId global para uso no upload
-      window._userId = userId;
-
-      const userId = session.user.id;
       const [sessaoRes, agendRes] = await Promise.all([
         sb.from('sessoes').select('*, servicos(nome), fotos_sessao(*), produtos_sessao(*, produtos(*))').eq('cliente_id', userId).order('data_sessao', { ascending: false }),
         sb.from('agendamentos').select('*, servicos(nome)').eq('cliente_id', userId).gte('data_agendamento', new Date().toISOString()).order('data_agendamento', { ascending: true })
