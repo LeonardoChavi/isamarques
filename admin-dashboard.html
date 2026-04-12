@@ -20,15 +20,11 @@
     .stat-card { background: rgba(253,246,240,0.85); backdrop-filter: blur(8px); border: 1px solid var(--border); padding: 1.6rem 2rem; }
     .stat-number { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; color: var(--rose); line-height: 1; margin-bottom: .3rem; }
     .stat-label { font-size: .78rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted); }
-
-    /* TABS ADMIN */
     .admin-tabs { display: flex; gap: .5rem; margin-bottom: 2.4rem; flex-wrap: wrap; }
     .admin-tab { font-family: 'Jost', sans-serif; font-size: .8rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted); background: transparent; border: 1px solid var(--border); padding: .65rem 1.6rem; cursor: pointer; transition: all .25s; }
     .admin-tab.active { background: var(--rose); border-color: var(--rose); color: var(--warm-white); }
     .admin-panel { display: none; }
     .admin-panel.active { display: block; }
-
-    /* CLIENTES LIST */
     .clientes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 1.2rem; }
     .cliente-card { background: rgba(253,246,240,0.85); backdrop-filter: blur(8px); border: 1px solid var(--border); padding: 1.6rem 1.8rem; cursor: pointer; transition: all .3s; }
     .cliente-card:hover { border-color: var(--rose-light); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(180,100,120,.08); }
@@ -36,8 +32,6 @@
     .cliente-nome { font-size: 1.05rem; font-weight: 400; color: var(--text); margin-bottom: .2rem; }
     .cliente-email { font-size: .85rem; font-weight: 300; color: var(--text-muted); margin-bottom: .2rem; }
     .cliente-meta { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: var(--rose); margin-top: .6rem; }
-
-    /* MODAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(30,20,20,.5); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 1.6rem; overflow-y: auto; }
     .modal-overlay.open { display: flex; }
     .modal { background: var(--warm-white); border: 1px solid var(--border); padding: 2.8rem; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; position: relative; }
@@ -57,31 +51,22 @@
     .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
     .btn-ghost { font-family: 'Jost', sans-serif; font-size: .9rem; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: var(--rose); background: transparent; border: 1px solid var(--rose-light); padding: .9rem; cursor: pointer; transition: all .25s; }
     .btn-ghost:hover { background: var(--rose-pale); }
-
-    /* SESSÕES ADMIN */
     .sessao-item { background: rgba(253,246,240,0.85); border: 1px solid var(--border); padding: 1.4rem 1.8rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .8rem; }
     .sessao-item-left { flex: 1; }
     .sessao-item-nome { font-size: 1rem; font-weight: 400; color: var(--text); margin-bottom: .2rem; }
     .sessao-item-info { font-size: .85rem; font-weight: 300; color: var(--text-muted); }
     .btn-sm { font-family: 'Jost', sans-serif; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rose); background: transparent; border: 1px solid var(--rose-light); padding: .4rem .9rem; cursor: pointer; transition: all .2s; }
     .btn-sm:hover { background: var(--rose); color: white; border-color: var(--rose); }
-
-    /* AGENDAMENTOS ADMIN */
     .agend-item { background: rgba(253,246,240,0.85); border: 1px solid var(--border); padding: 1.4rem 1.8rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .8rem; }
     .agend-status { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; padding: .3rem .8rem; border: 1px solid; }
     .agend-status.pendente { color:#7a6020; border-color:#d4b870; background:#fdf8e8; }
     .agend-status.confirmado { color:#2a5e3f; border-color:#a0c4b2; background:#f0fdf6; }
     .agend-status.cancelado { color:#8f2a2a; border-color:#d4a0a0; background:#fdf0f0; }
-
-    /* TOP BAR */
     .section-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.6rem; flex-wrap: wrap; gap: 1rem; }
     .section-bar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; color: var(--text); }
     .section-bar-title em { font-style: italic; color: var(--rose); }
-
-    /* SEARCH */
     .search-input { font-family: 'Jost', sans-serif; font-size: .9rem; font-weight: 300; color: var(--text); background: rgba(253,246,240,0.9); border: 1px solid var(--border); padding: .6rem 1rem; outline: none; transition: border-color .2s; width: 240px; }
     .search-input:focus { border-color: var(--rose-light); }
-
     .loading { text-align:center; padding:3rem; font-size:.9rem; font-weight:300; color:var(--text-muted); letter-spacing:.1em; text-transform:uppercase; }
     .empty-state { text-align:center; padding:3rem 2rem; border:1px dashed var(--border); }
     .empty-text { font-size:.9rem; font-weight:300; color:var(--text-muted); }
@@ -89,7 +74,6 @@
     .msg-bar.error { color:#8f2a2a; border-color:#d4a0a0; background:#fdf0f0; }
     .msg-bar.success { color:#2a5e3f; border-color:#a0c4b2; background:#f0fdf6; }
     .msg-bar.show { display:block; }
-
     @media (max-width:900px) { .admin-header,.admin-main { padding-left:1.6rem; padding-right:1.6rem; } .stats-grid { grid-template-columns:1fr 1fr; } .modal { padding:1.8rem; } .modal-form-row { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -123,7 +107,6 @@
       <button class="admin-tab" onclick="switchTab('agendamentos')">Agendamentos</button>
     </div>
 
-    <!-- CLIENTES -->
     <div id="panel-clientes" class="admin-panel active">
       <div class="section-bar">
         <h2 class="section-bar-title">Minhas <em>Clientes</em></h2>
@@ -132,7 +115,6 @@
       <div id="clientes-list" class="loading">Carregando clientes...</div>
     </div>
 
-    <!-- SESSÕES -->
     <div id="panel-sessoes" class="admin-panel">
       <div class="section-bar">
         <h2 class="section-bar-title">Histórico de <em>Sessões</em></h2>
@@ -142,7 +124,6 @@
       <div id="sessoes-list" class="loading">Carregando sessões...</div>
     </div>
 
-    <!-- AGENDAMENTOS -->
     <div id="panel-agendamentos" class="admin-panel">
       <div class="section-bar">
         <h2 class="section-bar-title">Próximos <em>Agendamentos</em></h2>
@@ -185,15 +166,9 @@
           <label>Evolução / observações</label>
           <textarea id="s-obs" placeholder="Como a cliente respondeu ao tratamento, resultados observados, próximos passos..."></textarea>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
-          <div>
-            <label>Foto — Antes</label>
-            <input type="file" id="s-foto-antes" accept="image/*" style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" />
-          </div>
-          <div>
-            <label>Foto — Depois</label>
-            <input type="file" id="s-foto-depois" accept="image/*" style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" />
-          </div>
+        <div>
+          <label>Foto da sessão</label>
+          <input type="file" id="s-foto-sessao" accept="image/*" style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" />
         </div>
         <div id="s-upload-progress" style="display:none;font-size:.85rem;color:var(--text-muted);font-weight:300;"></div>
         <div style="display:flex;gap:.8rem;">
@@ -275,17 +250,11 @@
         sb.from('agendamentos').select('*, profiles(nome,email), servicos(nome)').order('data_agendamento', { ascending: true }),
         sb.from('servicos').select('*').eq('ativo', true).order('nome')
       ]);
-
       allClientes = clientesRes.data || [];
       allSessoes = sessoesRes.data || [];
       allAgendamentos = agendRes.data || [];
       allServicos = servicosRes.data || [];
-
-      renderStats();
-      renderClientes(allClientes);
-      renderSessoes(allSessoes);
-      renderAgendamentos(allAgendamentos);
-      populateSelects();
+      renderStats(); renderClientes(allClientes); renderSessoes(allSessoes); renderAgendamentos(allAgendamentos); populateSelects();
     }
 
     function renderStats() {
@@ -297,10 +266,7 @@
     }
 
     function renderClientes(lista) {
-      if (!lista.length) {
-        document.getElementById('clientes-list').innerHTML = `<div class="empty-state"><p class="empty-text">Nenhuma cliente cadastrada ainda.</p></div>`;
-        return;
-      }
+      if (!lista.length) { document.getElementById('clientes-list').innerHTML = `<div class="empty-state"><p class="empty-text">Nenhuma cliente cadastrada ainda.</p></div>`; return; }
       let html = `<div class="clientes-grid">`;
       lista.forEach(c => {
         const inicial = (c.nome||c.email||'?')[0].toUpperCase();
@@ -322,35 +288,26 @@
 
     function filterClientes() {
       const q = document.getElementById('search-clientes').value.toLowerCase();
-      const filtrados = allClientes.filter(c => (c.nome||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q));
-      renderClientes(filtrados);
+      renderClientes(allClientes.filter(c => (c.nome||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q)));
     }
 
     function renderSessoes(lista) {
-      if (!lista.length) {
-        document.getElementById('sessoes-list').innerHTML = `<div class="empty-state"><p class="empty-text">Nenhuma sessão registrada.</p></div>`;
-        return;
-      }
+      if (!lista.length) { document.getElementById('sessoes-list').innerHTML = `<div class="empty-state"><p class="empty-text">Nenhuma sessão registrada.</p></div>`; return; }
       let html = '';
       lista.forEach(s => {
         const dt = new Date(s.data_sessao).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
-        html += `<div class="sessao-item">
-          <div class="sessao-item-left">
-            <div class="sessao-item-nome">${s.profiles?.nome||s.profiles?.email||'—'}</div>
-            <div class="sessao-item-info">${s.servicos?.nome||'Atendimento'} · ${dt}</div>
-            ${s.observacoes?`<div class="sessao-item-info" style="margin-top:.3rem;font-style:italic;">${s.observacoes.substring(0,80)}${s.observacoes.length>80?'...':''}</div>`:''}
-          </div>
-        </div>`;
+        html += `<div class="sessao-item"><div class="sessao-item-left">
+          <div class="sessao-item-nome">${s.profiles?.nome||s.profiles?.email||'—'}</div>
+          <div class="sessao-item-info">${s.servicos?.nome||'Atendimento'} · ${dt}</div>
+          ${s.observacoes?`<div class="sessao-item-info" style="margin-top:.3rem;font-style:italic;">${s.observacoes.substring(0,80)}${s.observacoes.length>80?'...':''}</div>`:''}
+        </div></div>`;
       });
       document.getElementById('sessoes-list').innerHTML = html;
     }
 
     function renderAgendamentos(lista) {
       const futuros = lista.filter(a => new Date(a.data_agendamento) > new Date());
-      if (!futuros.length) {
-        document.getElementById('agend-list').innerHTML = `<div class="empty-state"><p class="empty-text">Nenhum agendamento futuro.</p></div>`;
-        return;
-      }
+      if (!futuros.length) { document.getElementById('agend-list').innerHTML = `<div class="empty-state"><p class="empty-text">Nenhum agendamento futuro.</p></div>`; return; }
       let html = '';
       futuros.forEach(a => {
         const dt = new Date(a.data_agendamento).toLocaleString('pt-BR',{weekday:'long',day:'2-digit',month:'long',hour:'2-digit',minute:'2-digit'});
@@ -372,7 +329,7 @@
       const clienteOpts = allClientes.map(c=>`<option value="${c.id}">${c.nome||c.email}</option>`).join('');
       const servicoOpts = `<option value="">— Selecione —</option>` + allServicos.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');
       ['s-cliente','a-cliente'].forEach(id => document.getElementById(id).innerHTML = clienteOpts);
-      document.getElementById('a-servico').innerHTML = servicoOpts; // só agendamentos usa os serviços do banco
+      document.getElementById('a-servico').innerHTML = servicoOpts;
     }
 
     async function abrirCliente(id) {
@@ -407,19 +364,17 @@
                 <div style="font-size:1rem;font-weight:400;color:var(--text);">${s.categoria ? s.categoria.charAt(0).toUpperCase()+s.categoria.slice(1) : (s.servicos?.nome||'Atendimento')}</div>
                 <div style="font-size:.85rem;color:var(--rose-deep);">${dt}</div>
               </div>
-              <button onclick="excluirSessao('${s.id}', '${currentClienteId}')" style="font-family:'Jost',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);padding:.35rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='#8f2a2a';this.style.borderColor='#d4a0a0';" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)';">Excluir</button>
+              <button onclick="excluirSessao('${s.id}', '${window.currentClienteId}')" style="font-family:'Jost',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);padding:.35rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='#8f2a2a';this.style.borderColor='#d4a0a0';" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)';">Excluir</button>
             </div>`;
           if (s.tratamento) html += `<div style="padding:1rem 1.4rem .4rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Tratamento realizado</div><div style="font-size:.9rem;color:var(--text);line-height:1.8;">${s.tratamento}</div></div>`;
           if (s.observacoes) html += `<div style="padding:${s.tratamento?'.4rem':'1rem'} 1.4rem 1rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Evolução / Observações</div><div style="font-size:.9rem;color:var(--text-muted);line-height:1.8;font-style:italic;">${s.observacoes}</div></div>`;
           if (fotos.length) {
-            const fotoAntes  = fotos.find(f => f.tipo === 'antes');
-            const fotoDepois = fotos.find(f => f.tipo === 'depois');
             html += `<div style="padding:.6rem 1.4rem 1rem;">`;
-            html += `<div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.6rem;">Fotos</div>`;
-            html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">`;
-            if (fotoAntes)  html += `<div><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text-muted);margin-bottom:.3rem;">Antes</div><img src="${fotoAntes.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--border);" /></div>`;
-            if (fotoDepois) html += `<div><div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.14em;color:var(--text-muted);margin-bottom:.3rem;">Depois</div><img src="${fotoDepois.url}" style="width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--border);" /></div>`;
-            html += `</div></div>`;
+            html += `<div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.6rem;">Foto da sessão</div>`;
+            fotos.forEach(f => {
+              html += `<img src="${f.url}" style="width:100%;max-width:320px;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);display:block;" />`;
+            });
+            html += `</div>`;
           }
           if (produtos.length) {
             html += `<div style="padding:.4rem 1.4rem 1rem;display:flex;flex-wrap:wrap;gap:.4rem;">`;
@@ -434,28 +389,18 @@
 
     async function excluirSessao(sessaoId, clienteId) {
       if (!confirm('Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.')) return;
-
-      // Busca fotos para deletar do Storage
       const { data: fotos } = await sb.from('fotos_sessao').select('url').eq('sessao_id', sessaoId);
-
-      // Deleta fotos do Storage
       if (fotos && fotos.length) {
         const paths = fotos.map(f => {
-          const url = f.url;
-          const idx = url.indexOf('/fotos-sessoes/');
-          return idx !== -1 ? decodeURIComponent(url.substring(idx + 15)) : null;
+          const idx = f.url.indexOf('/fotos-sessoes/');
+          return idx !== -1 ? decodeURIComponent(f.url.substring(idx + 15)) : null;
         }).filter(Boolean);
         if (paths.length) await sb.storage.from('fotos-sessoes').remove(paths);
       }
-
-      // Deleta registros vinculados e a sessão
       await sb.from('fotos_sessao').delete().eq('sessao_id', sessaoId);
       await sb.from('produtos_sessao').delete().eq('sessao_id', sessaoId);
       const { error } = await sb.from('sessoes').delete().eq('id', sessaoId);
-
       if (error) { alert('Erro ao excluir sessão: ' + error.message); return; }
-
-      // Recarrega o painel da cliente
       abrirCliente(clienteId);
     }
 
@@ -463,7 +408,6 @@
       const btn = document.getElementById('btn-salvar-sessao');
       btn.disabled = true; btn.textContent = 'Salvando...';
 
-      // 1. Salva a sessão e retorna o ID
       const { data: sessao, error } = await sb.from('sessoes').insert({
         cliente_id: document.getElementById('s-cliente').value,
         categoria: document.getElementById('s-servico').value || null,
@@ -478,30 +422,26 @@
         showMsg('msg-sessao', 'Erro ao salvar sessão.', 'error'); return;
       }
 
-      // 2. Upload das fotos (se houver)
       const progress = document.getElementById('s-upload-progress');
-      const fotoAntes  = document.getElementById('s-foto-antes').files[0];
-      const fotoDepois = document.getElementById('s-foto-depois').files[0];
+      const fotoSessao = document.getElementById('s-foto-sessao').files[0];
 
-      async function uploadFoto(file, tipo) {
-        if (!file) return;
+      if (fotoSessao) {
         progress.style.display = 'block';
-        progress.textContent = `Enviando foto ${tipo}...`;
-        const ext = file.name.split('.').pop();
-        const path = `${sessao.id}/${tipo}-${Date.now()}.${ext}`;
-        const { error: upErr } = await sb.storage.from('fotos-sessoes').upload(path, file, { upsert: true });
-        if (upErr) { progress.textContent = `Erro ao enviar foto ${tipo}: ${upErr.message}`; return; }
-        const { data: { publicUrl } } = sb.storage.from('fotos-sessoes').getPublicUrl(path);
-        await sb.from('fotos_sessao').insert({ sessao_id: sessao.id, url: publicUrl, tipo });
+        progress.textContent = 'Enviando foto...';
+        const ext = fotoSessao.name.split('.').pop();
+        const path = `${sessao.id}/sessao-${Date.now()}.${ext}`;
+        const { error: upErr } = await sb.storage.from('fotos-sessoes').upload(path, fotoSessao, { upsert: true });
+        if (!upErr) {
+          const { data: { publicUrl } } = sb.storage.from('fotos-sessoes').getPublicUrl(path);
+          await sb.from('fotos_sessao').insert({ sessao_id: sessao.id, url: publicUrl, tipo: 'sessao' });
+        } else {
+          progress.textContent = 'Erro ao enviar foto: ' + upErr.message;
+        }
+        progress.style.display = 'none';
       }
 
-      await uploadFoto(fotoAntes, 'antes');
-      await uploadFoto(fotoDepois, 'depois');
-
-      progress.style.display = 'none';
       document.getElementById('s-tratamento').value = '';
-      document.getElementById('s-foto-antes').value  = '';
-      document.getElementById('s-foto-depois').value = '';
+      document.getElementById('s-foto-sessao').value = '';
 
       btn.disabled = false; btn.textContent = 'Salvar sessão';
       closeModal('modal-sessao');
