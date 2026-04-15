@@ -74,6 +74,20 @@
     .msg-bar.error { color:#8f2a2a; border-color:#d4a0a0; background:#fdf0f0; }
     .msg-bar.success { color:#2a5e3f; border-color:#a0c4b2; background:#f0fdf6; }
     .msg-bar.show { display:block; }
+    /* FOTOS GRID */
+    .fotos-upload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px,1fr)); gap: .6rem; margin-top: .4rem; }
+    .foto-preview { position: relative; aspect-ratio: 1; overflow: hidden; border: 1px solid var(--border); }
+    .foto-preview img { width:100%; height:100%; object-fit:cover; }
+    .foto-preview-remove { position:absolute; top:.2rem; right:.2rem; background:rgba(143,42,42,.85); color:white; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:.8rem; line-height:1; display:flex; align-items:center; justify-content:center; }
+    .fotos-sessao-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap: .6rem; margin-top: .4rem; }
+    .foto-sessao-item { position:relative; aspect-ratio:1; overflow:hidden; border:1px solid var(--border); cursor:pointer; }
+    .foto-sessao-item img { width:100%; height:100%; object-fit:cover; transition:transform .2s; }
+    .foto-sessao-item:hover img { transform:scale(1.05); }
+    /* LIGHTBOX */
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(30,20,20,.92); z-index:9999; align-items:center; justify-content:center; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:90vw; max-height:90vh; object-fit:contain; }
+    .lightbox-close { position:absolute; top:1.5rem; right:2rem; color:white; font-size:2rem; cursor:pointer; background:none; border:none; }
     @media (max-width:900px) { .admin-header,.admin-main { padding-left:1.6rem; padding-right:1.6rem; } .stats-grid { grid-template-columns:1fr 1fr; } .modal { padding:1.8rem; } .modal-form-row { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -98,7 +112,7 @@
       <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">Clientes</div></div>
       <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">Sessões realizadas</div></div>
       <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">Agendamentos</div></div>
-      <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">Produtos cadastrados</div></div>
+      <div class="stat-card"><div class="stat-number">—</div><div class="stat-label">Serviços ativos</div></div>
     </div>
 
     <div class="admin-tabs">
@@ -118,7 +132,7 @@
     <div id="panel-sessoes" class="admin-panel">
       <div class="section-bar">
         <h2 class="section-bar-title">Histórico de <em>Sessões</em></h2>
-        <button class="btn-primary" onclick="openModal('modal-sessao')">+ Nova Sessão</button>
+        <button class="btn-primary" onclick="abrirModalNovaSessao()">+ Nova Sessão</button>
       </div>
       <div id="msg-sessao" class="msg-bar"></div>
       <div id="sessoes-list" class="loading">Carregando sessões...</div>
@@ -134,12 +148,13 @@
     </div>
   </div>
 
-  <!-- MODAL: NOVA SESSÃO -->
+  <!-- MODAL: SESSÃO (nova e edição) -->
   <div class="modal-overlay" id="modal-sessao">
     <div class="modal">
       <button class="modal-close" onclick="closeModal('modal-sessao')">×</button>
-      <h2 class="modal-title">Registrar <em>Sessão</em></h2>
+      <h2 class="modal-title" id="modal-sessao-titulo">Registrar <em>Sessão</em></h2>
       <p class="modal-sub">Preencha os dados do atendimento realizado.</p>
+      <input type="hidden" id="s-id" />
       <div class="modal-form">
         <div>
           <label>Cliente</label>
@@ -167,8 +182,9 @@
           <textarea id="s-obs" placeholder="Como a cliente respondeu ao tratamento, resultados observados, próximos passos..."></textarea>
         </div>
         <div>
-          <label>Foto da sessão</label>
-          <input type="file" id="s-foto-sessao" accept="image/*" style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" />
+          <label>Fotos da sessão <span style="font-weight:300;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:.78rem;">(múltiplas permitidas)</span></label>
+          <input type="file" id="s-foto-sessao" accept="image/*" multiple style="font-family:'Jost',sans-serif;font-size:.85rem;font-weight:300;color:var(--text-muted);background:rgba(255,255,255,0.6);border:1px solid var(--border);padding:.6rem .8rem;width:100%;cursor:pointer;" onchange="previewFotos(this)" />
+          <div class="fotos-upload-grid" id="fotos-preview"></div>
         </div>
         <div id="s-upload-progress" style="display:none;font-size:.85rem;color:var(--text-muted);font-weight:300;"></div>
         <div style="display:flex;gap:.8rem;">
@@ -186,31 +202,13 @@
       <h2 class="modal-title">Novo <em>Agendamento</em></h2>
       <p class="modal-sub">Registre um próximo atendimento para uma cliente.</p>
       <div class="modal-form">
-        <div>
-          <label>Cliente</label>
-          <select id="a-cliente"></select>
-        </div>
-        <div>
-          <label>Serviço</label>
-          <select id="a-servico"></select>
-        </div>
+        <div><label>Cliente</label><select id="a-cliente"></select></div>
+        <div><label>Serviço</label><select id="a-servico"></select></div>
         <div class="modal-form-row">
-          <div>
-            <label>Data e horário</label>
-            <input type="datetime-local" id="a-data" />
-          </div>
-          <div>
-            <label>Status</label>
-            <select id="a-status">
-              <option value="pendente">Pendente</option>
-              <option value="confirmado">Confirmado</option>
-            </select>
-          </div>
+          <div><label>Data e horário</label><input type="datetime-local" id="a-data" /></div>
+          <div><label>Status</label><select id="a-status"><option value="pendente">Pendente</option><option value="confirmado">Confirmado</option></select></div>
         </div>
-        <div>
-          <label>Observações</label>
-          <textarea id="a-obs" placeholder="Informações adicionais..."></textarea>
-        </div>
+        <div><label>Observações</label><textarea id="a-obs" placeholder="Informações adicionais..."></textarea></div>
         <div style="display:flex;gap:.8rem;">
           <button class="btn-primary" style="flex:1;" onclick="salvarAgendamento()" id="btn-salvar-agend">Salvar agendamento</button>
           <button class="btn-ghost" style="flex:1;" onclick="closeModal('modal-agendamento')">Cancelar</button>
@@ -227,6 +225,12 @@
     </div>
   </div>
 
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('open')">×</button>
+    <img id="lightbox-img" src="" alt="" />
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://uieblwzupapqgfdaipao.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZWJsd3p1cGFwcWdmZGFpcGFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MjQ3MzIsImV4cCI6MjA4OTIwMDczMn0.JPn7XdRS2PS5ByEVhRo8OslaAfXFESNRCrEl_BPx1HY';
@@ -234,6 +238,7 @@
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let allClientes = [], allSessoes = [], allAgendamentos = [], allServicos = [];
+    let fotosParaRemover = []; // IDs de fotos existentes para remover na edição
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
@@ -246,7 +251,7 @@
     async function loadAll() {
       const [clientesRes, sessoesRes, agendRes, servicosRes] = await Promise.all([
         sb.from('profiles').select('*').eq('is_admin', false).order('nome'),
-        sb.from('sessoes').select('*, profiles(nome,email), servicos(nome)').order('data_sessao', { ascending: false }),
+        sb.from('sessoes').select('*, profiles(nome,email), servicos(nome), fotos_sessao(*)').order('data_sessao', { ascending: false }),
         sb.from('agendamentos').select('*, profiles(nome,email), servicos(nome)').order('data_agendamento', { ascending: true }),
         sb.from('servicos').select('*').eq('ativo', true).order('nome')
       ]);
@@ -255,6 +260,14 @@
       allAgendamentos = agendRes.data || [];
       allServicos = servicosRes.data || [];
       renderStats(); renderClientes(allClientes); renderSessoes(allSessoes); renderAgendamentos(allAgendamentos); populateSelects();
+    }
+
+    function sessoesPorCliente(clienteId) {
+      return allSessoes.filter(s => s.cliente_id === clienteId).length;
+    }
+
+    function pluralSessoes(n) {
+      return n === 1 ? '1 sessão registrada' : `${n} sessões registradas`;
     }
 
     function renderStats() {
@@ -270,7 +283,8 @@
       let html = `<div class="clientes-grid">`;
       lista.forEach(c => {
         const inicial = (c.nome||c.email||'?')[0].toUpperCase();
-        const sessoesCount = allSessoes.filter(s=>s.cliente_id===c.id).length;
+        // FIX: usar sessoesPorCliente() que consulta allSessoes já carregado
+        const count = sessoesPorCliente(c.id);
         const avatarHtml = c.foto_url
           ? `<div class="cliente-avatar" style="padding:0;overflow:hidden;"><img src="${c.foto_url}" style="width:100%;height:100%;object-fit:cover;" /></div>`
           : `<div class="cliente-avatar">${inicial}</div>`;
@@ -279,7 +293,7 @@
           <div class="cliente-nome">${c.nome||'—'}</div>
           <div class="cliente-email">${c.email}</div>
           ${c.telefone?`<div class="cliente-email">${c.telefone}</div>`:''}
-          <div class="cliente-meta">${sessoesCount} sessão${sessoesCount!==1?'s':''} registrada${sessoesCount!==1?'s':''}</div>
+          <div class="cliente-meta">${pluralSessoes(count)}</div>
         </div>`;
       });
       html += `</div>`;
@@ -296,11 +310,14 @@
       let html = '';
       lista.forEach(s => {
         const dt = new Date(s.data_sessao).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+        const nFotos = s.fotos_sessao?.length || 0;
         html += `<div class="sessao-item"><div class="sessao-item-left">
           <div class="sessao-item-nome">${s.profiles?.nome||s.profiles?.email||'—'}</div>
-          <div class="sessao-item-info">${s.servicos?.nome||'Atendimento'} · ${dt}</div>
-          ${s.observacoes?`<div class="sessao-item-info" style="margin-top:.3rem;font-style:italic;">${s.observacoes.substring(0,80)}${s.observacoes.length>80?'...':''}</div>`:''}
-        </div></div>`;
+          <div class="sessao-item-info">${s.categoria ? s.categoria.charAt(0).toUpperCase()+s.categoria.slice(1) : 'Atendimento'} · ${dt}${nFotos>0?' · '+nFotos+' foto'+(nFotos>1?'s':''):''}</div>
+          ${s.tratamento?`<div class="sessao-item-info" style="margin-top:.3rem;font-style:italic;">${s.tratamento.substring(0,80)}${s.tratamento.length>80?'...':''}</div>`:''}
+        </div>
+        <button class="btn-sm" onclick="editarSessao('${s.id}')">Editar</button>
+        </div>`;
       });
       document.getElementById('sessoes-list').innerHTML = html;
     }
@@ -332,6 +349,144 @@
       document.getElementById('a-servico').innerHTML = servicoOpts;
     }
 
+    // ─── FOTOS PREVIEW ───────────────────────────────────────
+    let fotosNovas = []; // File objects selecionados
+
+    function previewFotos(input) {
+      const files = Array.from(input.files);
+      files.forEach(file => fotosNovas.push(file));
+      renderFotosPreview();
+      input.value = ''; // permite selecionar mais
+    }
+
+    function renderFotosPreview() {
+      const grid = document.getElementById('fotos-preview');
+      grid.innerHTML = fotosNovas.map((f, i) => {
+        const url = URL.createObjectURL(f);
+        return `<div class="foto-preview">
+          <img src="${url}" />
+          <button class="foto-preview-remove" onclick="removerFotoNova(${i})">×</button>
+        </div>`;
+      }).join('');
+    }
+
+    function removerFotoNova(idx) {
+      fotosNovas.splice(idx, 1);
+      renderFotosPreview();
+    }
+
+    // ─── ABRIR MODAL ─────────────────────────────────────────
+    function abrirModalNovaSessao() {
+      // Limpa tudo
+      document.getElementById('s-id').value = '';
+      document.getElementById('s-cliente').value = '';
+      document.getElementById('s-servico').value = '';
+      document.getElementById('s-data').value = '';
+      document.getElementById('s-tratamento').value = '';
+      document.getElementById('s-obs').value = '';
+      document.getElementById('fotos-preview').innerHTML = '';
+      document.getElementById('modal-sessao-titulo').innerHTML = 'Registrar <em>Sessão</em>';
+      fotosNovas = [];
+      fotosParaRemover = [];
+      openModal('modal-sessao');
+    }
+
+    async function editarSessao(sessaoId) {
+      const s = allSessoes.find(x => x.id === sessaoId);
+      if (!s) return;
+      // Preenche campos
+      document.getElementById('s-id').value = s.id;
+      document.getElementById('s-cliente').value = s.cliente_id;
+      document.getElementById('s-servico').value = s.categoria || '';
+      const dtLocal = new Date(s.data_sessao);
+      dtLocal.setMinutes(dtLocal.getMinutes() - dtLocal.getTimezoneOffset());
+      document.getElementById('s-data').value = dtLocal.toISOString().slice(0,16);
+      document.getElementById('s-tratamento').value = s.tratamento || '';
+      document.getElementById('s-obs').value = s.observacoes || '';
+      document.getElementById('modal-sessao-titulo').innerHTML = 'Editar <em>Sessão</em>';
+      fotosNovas = [];
+      fotosParaRemover = [];
+
+      // Mostra fotos existentes com opção de remover
+      const fotos = s.fotos_sessao || [];
+      const grid = document.getElementById('fotos-preview');
+      grid.innerHTML = fotos.map(f => `
+        <div class="foto-preview" id="fp-${f.id}">
+          <img src="${f.url}" />
+          <button class="foto-preview-remove" onclick="marcarFotoRemover('${f.id}', '${f.url}')">×</button>
+        </div>`).join('');
+
+      openModal('modal-sessao');
+    }
+
+    function marcarFotoRemover(fotoId, url) {
+      fotosParaRemover.push({ id: fotoId, url });
+      document.getElementById('fp-'+fotoId)?.remove();
+    }
+
+    // ─── SALVAR SESSÃO (nova ou edição) ──────────────────────
+    async function salvarSessao() {
+      const btn = document.getElementById('btn-salvar-sessao');
+      btn.disabled = true; btn.textContent = 'Salvando...';
+      const progress = document.getElementById('s-upload-progress');
+
+      const sessaoId = document.getElementById('s-id').value;
+      const dados = {
+        cliente_id: document.getElementById('s-cliente').value,
+        categoria: document.getElementById('s-servico').value || null,
+        data_sessao: document.getElementById('s-data').value,
+        tratamento: document.getElementById('s-tratamento').value || null,
+        observacoes: document.getElementById('s-obs').value || null,
+        status: 'realizada'
+      };
+
+      let id = sessaoId;
+
+      if (sessaoId) {
+        // EDIÇÃO
+        const { error } = await sb.from('sessoes').update(dados).eq('id', sessaoId);
+        if (error) { showMsg('msg-sessao', 'Erro ao atualizar sessão.', 'error'); btn.disabled = false; btn.textContent = 'Salvar sessão'; return; }
+
+        // Remove fotos marcadas
+        for (const f of fotosParaRemover) {
+          const idx = f.url.indexOf('/fotos-sessoes/');
+          if (idx !== -1) {
+            const path = decodeURIComponent(f.url.substring(idx + 15));
+            await sb.storage.from('fotos-sessoes').remove([path]);
+          }
+          await sb.from('fotos_sessao').delete().eq('id', f.id);
+        }
+      } else {
+        // NOVA
+        const { data: sessao, error } = await sb.from('sessoes').insert(dados).select().single();
+        if (error) { showMsg('msg-sessao', 'Erro ao salvar sessão.', 'error'); btn.disabled = false; btn.textContent = 'Salvar sessão'; return; }
+        id = sessao.id;
+      }
+
+      // Upload fotos novas
+      for (let i = 0; i < fotosNovas.length; i++) {
+        const file = fotosNovas[i];
+        progress.style.display = 'block';
+        progress.textContent = `Enviando foto ${i+1} de ${fotosNovas.length}...`;
+        const ext = file.name.split('.').pop();
+        const path = `${id}/sessao-${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await sb.storage.from('fotos-sessoes').upload(path, file, { upsert: true });
+        if (!upErr) {
+          const { data: { publicUrl } } = sb.storage.from('fotos-sessoes').getPublicUrl(path);
+          await sb.from('fotos_sessao').insert({ sessao_id: id, url: publicUrl, tipo: 'sessao' });
+        }
+      }
+      progress.style.display = 'none';
+
+      fotosNovas = [];
+      fotosParaRemover = [];
+      btn.disabled = false; btn.textContent = 'Salvar sessão';
+      closeModal('modal-sessao');
+      showMsg('msg-sessao', sessaoId ? 'Sessão atualizada com sucesso!' : 'Sessão registrada com sucesso!', 'success');
+      await loadAll();
+    }
+
+    // ─── CLIENTE DETAIL ───────────────────────────────────────
     async function abrirCliente(id) {
       openModal('modal-cliente');
       window.currentClienteId = id;
@@ -353,8 +508,8 @@
       if (!sessoes?.length) {
         html += `<div class="empty-state"><p class="empty-text">Nenhuma sessão registrada para esta cliente.</p></div>`;
       } else {
-        html += `<p class="section-label">${sessoes.length} sessão${sessoes.length!==1?'s':''} registrada${sessoes.length!==1?'s':''}</p>`;
-        sessoes.forEach((s,i) => {
+        html += `<p class="section-label">${pluralSessoes(sessoes.length)}</p>`;
+        sessoes.forEach(s => {
           const dt = new Date(s.data_sessao).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
           const fotos = s.fotos_sessao||[];
           const produtos = s.produtos_sessao||[];
@@ -364,17 +519,21 @@
                 <div style="font-size:1rem;font-weight:400;color:var(--text);">${s.categoria ? s.categoria.charAt(0).toUpperCase()+s.categoria.slice(1) : (s.servicos?.nome||'Atendimento')}</div>
                 <div style="font-size:.85rem;color:var(--rose-deep);">${dt}</div>
               </div>
-              <button onclick="excluirSessao('${s.id}', '${window.currentClienteId}')" style="font-family:'Jost',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);padding:.35rem .8rem;cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.color='#8f2a2a';this.style.borderColor='#d4a0a0';" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)';">Excluir</button>
+              <div style="display:flex;gap:.5rem;">
+                <button onclick="closeModal('modal-cliente');editarSessao('${s.id}')" style="font-family:'Jost',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--rose);background:transparent;border:1px solid var(--rose-light);padding:.35rem .8rem;cursor:pointer;white-space:nowrap;">Editar</button>
+                <button onclick="excluirSessao('${s.id}','${window.currentClienteId}')" style="font-family:'Jost',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:1px solid var(--border);padding:.35rem .8rem;cursor:pointer;white-space:nowrap;" onmouseover="this.style.color='#8f2a2a';this.style.borderColor='#d4a0a0';" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)';">Excluir</button>
+              </div>
             </div>`;
           if (s.tratamento) html += `<div style="padding:1rem 1.4rem .4rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Tratamento realizado</div><div style="font-size:.9rem;color:var(--text);line-height:1.8;">${s.tratamento}</div></div>`;
           if (s.observacoes) html += `<div style="padding:${s.tratamento?'.4rem':'1rem'} 1.4rem 1rem;"><div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.4rem;">Evolução / Observações</div><div style="font-size:.9rem;color:var(--text-muted);line-height:1.8;font-style:italic;">${s.observacoes}</div></div>`;
           if (fotos.length) {
             html += `<div style="padding:.6rem 1.4rem 1rem;">`;
-            html += `<div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.6rem;">Foto da sessão</div>`;
+            html += `<div style="font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--rose);font-weight:500;margin-bottom:.6rem;">Fotos (${fotos.length})</div>`;
+            html += `<div class="fotos-sessao-grid">`;
             fotos.forEach(f => {
-              html += `<img src="${f.url}" style="width:100%;max-width:320px;aspect-ratio:4/3;object-fit:cover;border:1px solid var(--border);display:block;" />`;
+              html += `<div class="foto-sessao-item" onclick="abrirLightbox('${f.url}')"><img src="${f.url}" loading="lazy" /></div>`;
             });
-            html += `</div>`;
+            html += `</div></div>`;
           }
           if (produtos.length) {
             html += `<div style="padding:.4rem 1.4rem 1rem;display:flex;flex-wrap:wrap;gap:.4rem;">`;
@@ -387,10 +546,18 @@
       document.getElementById('modal-cliente-content').innerHTML = html;
     }
 
+    function abrirLightbox(url) {
+      document.getElementById('lightbox-img').src = url;
+      document.getElementById('lightbox').classList.add('open');
+    }
+    document.getElementById('lightbox').addEventListener('click', e => {
+      if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+    });
+
     async function excluirSessao(sessaoId, clienteId) {
       if (!confirm('Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.')) return;
       const { data: fotos } = await sb.from('fotos_sessao').select('url').eq('sessao_id', sessaoId);
-      if (fotos && fotos.length) {
+      if (fotos?.length) {
         const paths = fotos.map(f => {
           const idx = f.url.indexOf('/fotos-sessoes/');
           return idx !== -1 ? decodeURIComponent(f.url.substring(idx + 15)) : null;
@@ -401,52 +568,8 @@
       await sb.from('produtos_sessao').delete().eq('sessao_id', sessaoId);
       const { error } = await sb.from('sessoes').delete().eq('id', sessaoId);
       if (error) { alert('Erro ao excluir sessão: ' + error.message); return; }
-      abrirCliente(clienteId);
-    }
-
-    async function salvarSessao() {
-      const btn = document.getElementById('btn-salvar-sessao');
-      btn.disabled = true; btn.textContent = 'Salvando...';
-
-      const { data: sessao, error } = await sb.from('sessoes').insert({
-        cliente_id: document.getElementById('s-cliente').value,
-        categoria: document.getElementById('s-servico').value || null,
-        data_sessao: document.getElementById('s-data').value,
-        tratamento: document.getElementById('s-tratamento').value || null,
-        observacoes: document.getElementById('s-obs').value,
-        status: 'realizada'
-      }).select().single();
-
-      if (error) {
-        btn.disabled = false; btn.textContent = 'Salvar sessão';
-        showMsg('msg-sessao', 'Erro ao salvar sessão.', 'error'); return;
-      }
-
-      const progress = document.getElementById('s-upload-progress');
-      const fotoSessao = document.getElementById('s-foto-sessao').files[0];
-
-      if (fotoSessao) {
-        progress.style.display = 'block';
-        progress.textContent = 'Enviando foto...';
-        const ext = fotoSessao.name.split('.').pop();
-        const path = `${sessao.id}/sessao-${Date.now()}.${ext}`;
-        const { error: upErr } = await sb.storage.from('fotos-sessoes').upload(path, fotoSessao, { upsert: true });
-        if (!upErr) {
-          const { data: { publicUrl } } = sb.storage.from('fotos-sessoes').getPublicUrl(path);
-          await sb.from('fotos_sessao').insert({ sessao_id: sessao.id, url: publicUrl, tipo: 'sessao' });
-        } else {
-          progress.textContent = 'Erro ao enviar foto: ' + upErr.message;
-        }
-        progress.style.display = 'none';
-      }
-
-      document.getElementById('s-tratamento').value = '';
-      document.getElementById('s-foto-sessao').value = '';
-
-      btn.disabled = false; btn.textContent = 'Salvar sessão';
-      closeModal('modal-sessao');
-      showMsg('msg-sessao', 'Sessão registrada com sucesso!', 'success');
       await loadAll();
+      abrirCliente(clienteId);
     }
 
     async function salvarAgendamento() {
