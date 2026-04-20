@@ -249,16 +249,23 @@
     }
 
     async function loadAll() {
-      const [clientesRes, sessoesRes, agendRes, servicosRes] = await Promise.all([
+      const [clientesRes, sessoesRes, agendRes, servicosRes, fotosRes] = await Promise.all([
         sb.from('profiles').select('*').eq('is_admin', false).order('nome'),
-        sb.from('sessoes').select('*, profiles(nome,email), servicos(nome), fotos_sessao(*)').order('data_sessao', { ascending: false }),
+        sb.from('sessoes').select('*, profiles(nome,email), servicos(nome)').order('data_sessao', { ascending: false }),
         sb.from('agendamentos').select('*, profiles(nome,email), servicos(nome)').order('data_agendamento', { ascending: true }),
-        sb.from('servicos').select('*').eq('ativo', true).order('nome')
+        sb.from('servicos').select('*').eq('ativo', true).order('nome'),
+        sb.from('fotos_sessao').select('*')
       ]);
       allClientes = clientesRes.data || [];
-      allSessoes = sessoesRes.data || [];
       allAgendamentos = agendRes.data || [];
       allServicos = servicosRes.data || [];
+
+      // Anexa fotos às sessões manualmente (evita bug do join com RLS)
+      const todasFotos = fotosRes.data || [];
+      allSessoes = (sessoesRes.data || []).map(s => ({
+        ...s,
+        fotos_sessao: todasFotos.filter(f => f.sessao_id === s.id)
+      }));
       renderStats(); renderClientes(allClientes); renderSessoes(allSessoes); renderAgendamentos(allAgendamentos); populateSelects();
     }
 
