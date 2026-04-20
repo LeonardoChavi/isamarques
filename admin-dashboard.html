@@ -251,7 +251,7 @@
     async function loadAll() {
       const [clientesRes, sessoesRes, agendRes, servicosRes, fotosRes] = await Promise.all([
         sb.from('profiles').select('*').eq('is_admin', false).order('nome'),
-        sb.from('sessoes').select('*, profiles(nome,email), servicos(nome)').order('data_sessao', { ascending: false }),
+        sb.from('sessoes').select('*, servicos(nome)').order('data_sessao', { ascending: false }),
         sb.from('agendamentos').select('*, profiles(nome,email), servicos(nome)').order('data_agendamento', { ascending: true }),
         sb.from('servicos').select('*').eq('ativo', true).order('nome'),
         sb.from('fotos_sessao').select('*')
@@ -324,7 +324,7 @@
         const dt = new Date(s.data_sessao).toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
         const nFotos = s.fotos_sessao?.length || 0;
         html += `<div class="sessao-item"><div class="sessao-item-left">
-          <div class="sessao-item-nome">${s.profiles?.nome||s.profiles?.email||'—'}</div>
+          <div class="sessao-item-nome">${allClientes.find(c=>c.id===s.cliente_id)?.nome || '—'}</div>
           <div class="sessao-item-info">${s.categoria ? s.categoria.charAt(0).toUpperCase()+s.categoria.slice(1) : 'Atendimento'} · ${dt}${nFotos>0?' · '+nFotos+' foto'+(nFotos>1?'s':''):''}</div>
           ${s.tratamento?`<div class="sessao-item-info" style="margin-top:.3rem;font-style:italic;">${s.tratamento.substring(0,80)}${s.tratamento.length>80?'...':''}</div>`:''}
         </div>
