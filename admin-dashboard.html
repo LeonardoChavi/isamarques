@@ -260,6 +260,11 @@
       allAgendamentos = agendRes.data || [];
       allServicos = servicosRes.data || [];
 
+      // Diagnóstico
+      console.log('Clientes:', allClientes.length, clientesRes.error);
+      console.log('Sessões raw:', sessoesRes.data?.length, sessoesRes.error);
+      console.log('Fotos raw:', fotosRes.data?.length, fotosRes.error);
+
       // Anexa fotos às sessões manualmente (evita bug do join com RLS)
       const todasFotos = fotosRes.data || [];
       allSessoes = (sessoesRes.data || []).map(s => ({
